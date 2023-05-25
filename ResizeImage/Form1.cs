@@ -1,10 +1,16 @@
+using ImageService;
 using OpenCvSharp;
+using System.Diagnostics;
+using System.IO;
+using System.Windows.Forms;
+using Point = OpenCvSharp.Point;
 using Size = OpenCvSharp.Size;
 
 namespace ResizeImage
 {
     public partial class Form1 : Form
     {
+        private ImageServices logoService;
         public Form1()
         {
             InitializeComponent();
@@ -43,9 +49,37 @@ namespace ResizeImage
                 {
                     string selectedFile = dialog.FileName;
                     txtLogo.Text = selectedFile;
+                    logoService = new ImageServices(Cv2.ImRead(txtLogo.Text).Clone());
+
+                    Mat imageResize = new Mat();
+                    logoService.Resize(imageResize, new Size(picLogo.Width, picLogo.Height));
+                    ImageServices imageResizeService = new ImageServices(imageResize);
+
+                    imageResizeService.FindContour();
+
+                    imageResizeService.DrawContours();
+
+                    picLogo.Image = ConvertMatToBitmap(imageResize);
+
+                    
                 }
                 else
+                {
                     txtLogo.Text = string.Empty;
+                    picLogo.Image = null;
+                }   
+            }
+        }
+
+        public Bitmap ConvertMatToBitmap(Mat mat)
+        {
+            byte[] byteArray;
+            Cv2.ImEncode(".bmp", mat, out byteArray);
+
+            // Create Bitmap from byte array
+            using (var stream = new MemoryStream(byteArray))
+            {
+                return new Bitmap(stream);
             }
         }
 
@@ -93,38 +127,150 @@ namespace ResizeImage
             if (string.IsNullOrEmpty(txtImageFolder.Text))
             {
                 MessageBox.Show("You must select image folder", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             else if (string.IsNullOrEmpty(txtLogo.Text))
             {
                 MessageBox.Show("You must select logo image file", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             else if (string.IsNullOrEmpty(txtFrame.Text))
             {
                 MessageBox.Show("You must choose frame file", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             else if (string.IsNullOrEmpty(txtResultFolder.Text))
             {
                 MessageBox.Show("You must choose result folder", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
-            string[] imageFiles = Directory.GetFiles(txtImageFolder.Text, "*.jpg;*.png;*.jpeg");
+            string[] imageFiles = Directory.GetFiles(txtImageFolder.Text);
 
             Mat frame = Cv2.ImRead(txtFrame.Text);
             Mat logo = Cv2.ImRead(txtLogo.Text);
-            Size logoSize = new Size(Convert.ToInt32(frame.Width * nmrRatio.Value / 100), Convert.ToInt32(frame.Height * nmrRatio.Value / 100));
-            Cv2.Resize(logo, logo, logoSize);
-            int i = 0;
+
+            ImageServices imageService;
+            ImageServices logoCloneService;
+            ImageServices frameCloneService;
+
+            int k = 0;
             foreach (string imageFile in imageFiles)
             {
-                Mat frameClone = frame.Clone();
-                Mat image = Cv2.ImRead(imageFile);
-                if(image != null)
+                string extension = Path.GetExtension(imageFile).ToLower();
+                if (extension == ".jpg" || extension == ".jpeg" || extension == ".png")
                 {
-                    image.CopyTo(frameClone[roi: new Rect(0, 0, frame.Width, frame.Height)]);
-                    logo.CopyTo(frame[roi: new Rect(0, 0, logo.Width, logo.Height)]);
-                    Cv2.ImWrite(txtResultFolder + "\\Result_" + i, frame);
+                    Mat image = Cv2.ImRead(imageFile);
+                    imageService = new ImageServices(image);
+
+                    Mat logoClone = logo.Clone();
+                    logoCloneService = new ImageServices(logoClone);
+
+                    Size logoSize = new Size(Convert.ToInt32(logoClone.Width * nmrRatio.Value / 100), Convert.ToInt32(logoClone.Height * nmrRatio.Value / 100));
+
+                    logoCloneService.Resize(logoCloneService.Image, logoSize);
+
+
+                    Mat frameClone = frame.Clone();
+                    frameCloneService = new ImageServices(frameClone);  
+
+                    if (imageService.Image != null)
+                    {
+                        if (imageService.Image.Width > frameCloneService.Image.Width || !imageService.IsVertical((double)nmrWDivH.Value))
+                        {
+                            imageService.Resize(imageService.Image, new Size(frameCloneService.Image.Width, imageService.Image.Height));
+                        }
+                        if (image.Height > frame.Height || imageService.IsVertical((double)nmrWDivH.Value))
+                        {
+                            imageService.Resize(imageService.Image, new Size(imageService.Image.Width, frameCloneService.Image.Height));
+                        }
+
+                        //image.CopyTo(frameClone[roi: new Rect(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2, image.Width, image.Height)]);
+                        imageService.CopyTo(frameCloneService.Image, new Rect(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2, image.Width, image.Height));
+
+                        int i = frameCloneService.Image.Width / 2 - imageService.Image.Width / 2;
+                        int j = (frameCloneService.Image.Height) - (frameCloneService.Image.Height / 2 - imageService.Image.Height / 2) - logoCloneService.Image.Height;
+
+                        int logoX = i + (int)nmrX.Value;
+                        int logoY = j - (int)nmrY.Value;
+
+                        Point image_topleft = new Point(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2);
+                        Point image_topright = new Point(frame.Width / 2 - image.Width / 2 + image.Width, frame.Height / 2 - image.Height / 2);
+                        Point image_bottomleft = new Point(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2 + image.Height);
+                        Point image_bottomright = new Point(frame.Width / 2 - image.Width / 2 + image.Width, frame.Height / 2 - image.Height / 2 + image.Height);
+
+                        if(logoX > image_topright.X - logoCloneService.Image.Width)
+                        {
+                            logoX = image_topright.X - logoCloneService.Image.Width;
+                        }
+                        if (logoY < image_topleft.Y)
+                        {
+                            logoY = image_topleft.Y;
+                        }
+
+
+                        Rect roi = new Rect(logoX, logoY, logoCloneService.Image.Width, logoCloneService.Image.Height);
+                        Mat croppedImage;
+                        try
+                        {
+                            croppedImage = new Mat(frameCloneService.Image, roi);
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                        for (int y = 0; y < logoClone.Height; y++)
+                        {
+                            for (int x = 0; x < logoClone.Width; x++)
+                            {
+                                var pixel = logoClone.At<Vec3b>(y, x);
+
+                                // Access the individual color channels (BGR)
+                                byte blue = pixel.Item0;
+                                byte green = pixel.Item1;
+                                byte red = pixel.Item2;
+                                if (blue >= 240 && green >= 240 && red >= 240)
+                                {
+                                    var pixelCropImage = croppedImage.At<Vec3b>(y, x);
+                                    logoCloneService.Image.Set(y, x, new Vec3b(pixelCropImage.Item0, pixelCropImage.Item1, pixelCropImage.Item2));
+                                }
+                            }
+                        }
+
+                        logoCloneService.CopyTo(frameCloneService.Image, new Rect(logoX, logoY, logoClone.Width, logoClone.Height));
+
+                        // Create the full file path
+                        string filePath = Path.Combine(txtResultFolder.Text, "Result_" + k + ".jpg");
+
+                        frameCloneService.SaveImage(filePath);  
+                    }
+                    k++;
                 }
-            }    
+            }
+            Process.Start("explorer.exe", txtResultFolder.Text);
+        }
+
+        private void nmrWDivH_ValueChanged(object sender, EventArgs e)
+        {
+            // Retrieve the entered value
+            decimal enteredValue;
+
+            // Try to parse the text value
+            if (decimal.TryParse(nmrWDivH.Value.ToString(), out enteredValue))
+            {
+                // Check if the value is outside the range
+                if (enteredValue < 0 || enteredValue > 1)
+                {
+                    // Show an error message
+                    MessageBox.Show("Value must be between 0 and 1.");
+                    nmrWDivH.Value = (decimal)1;
+                }
+            }
+            else
+            {
+                // Show an error message for invalid input
+                MessageBox.Show("Invalid input. Please enter a valid decimal value.");
+            }
         }
     }
 }

@@ -39,7 +39,19 @@
             this.btnProcess = new System.Windows.Forms.Button();
             this.nmrRatio = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.label2 = new System.Windows.Forms.Label();
+            this.nmrWDivH = new System.Windows.Forms.NumericUpDown();
+            this.nmrX = new System.Windows.Forms.NumericUpDown();
+            this.nmrY = new System.Windows.Forms.NumericUpDown();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.picLogo = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.nmrRatio)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmrWDivH)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmrX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmrY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLogo)).BeginInit();
             this.SuspendLayout();
             // 
             // txtImageFolder
@@ -116,9 +128,9 @@
             // 
             // btnProcess
             // 
-            this.btnProcess.Location = new System.Drawing.Point(327, 181);
+            this.btnProcess.Location = new System.Drawing.Point(12, 320);
             this.btnProcess.Name = "btnProcess";
-            this.btnProcess.Size = new System.Drawing.Size(108, 23);
+            this.btnProcess.Size = new System.Drawing.Size(133, 23);
             this.btnProcess.TabIndex = 8;
             this.btnProcess.Text = "Process Image";
             this.btnProcess.UseVisualStyleBackColor = true;
@@ -126,14 +138,14 @@
             // 
             // nmrRatio
             // 
-            this.nmrRatio.Location = new System.Drawing.Point(12, 181);
+            this.nmrRatio.Location = new System.Drawing.Point(13, 179);
             this.nmrRatio.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
             this.nmrRatio.Name = "nmrRatio";
-            this.nmrRatio.Size = new System.Drawing.Size(82, 23);
+            this.nmrRatio.Size = new System.Drawing.Size(84, 23);
             this.nmrRatio.TabIndex = 9;
             this.nmrRatio.Value = new decimal(new int[] {
             20,
@@ -144,17 +156,102 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(100, 183);
+            this.label1.Location = new System.Drawing.Point(105, 182);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(88, 15);
+            this.label1.Size = new System.Drawing.Size(77, 15);
             this.label1.TabIndex = 10;
-            this.label1.Text = "Logo/frame(%)";
+            this.label1.Text = "Logo size (%)";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(104, 215);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(80, 15);
+            this.label2.TabIndex = 12;
+            this.label2.Text = "Width/Height";
+            // 
+            // nmrWDivH
+            // 
+            this.nmrWDivH.DecimalPlaces = 2;
+            this.nmrWDivH.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.nmrWDivH.Location = new System.Drawing.Point(13, 209);
+            this.nmrWDivH.Name = "nmrWDivH";
+            this.nmrWDivH.Size = new System.Drawing.Size(84, 23);
+            this.nmrWDivH.TabIndex = 13;
+            this.nmrWDivH.Value = new decimal(new int[] {
+            8,
+            0,
+            0,
+            65536});
+            this.nmrWDivH.ValueChanged += new System.EventHandler(this.nmrWDivH_ValueChanged);
+            // 
+            // nmrX
+            // 
+            this.nmrX.Location = new System.Drawing.Point(13, 238);
+            this.nmrX.Maximum = new decimal(new int[] {
+            5000,
+            0,
+            0,
+            0});
+            this.nmrX.Name = "nmrX";
+            this.nmrX.Size = new System.Drawing.Size(83, 23);
+            this.nmrX.TabIndex = 14;
+            // 
+            // nmrY
+            // 
+            this.nmrY.Location = new System.Drawing.Point(12, 267);
+            this.nmrY.Maximum = new decimal(new int[] {
+            5000,
+            0,
+            0,
+            0});
+            this.nmrY.Name = "nmrY";
+            this.nmrY.Size = new System.Drawing.Size(85, 23);
+            this.nmrY.TabIndex = 15;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(106, 244);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(114, 15);
+            this.label3.TabIndex = 16;
+            this.label3.Text = "X (from bottom left)";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(106, 269);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(114, 15);
+            this.label4.TabIndex = 17;
+            this.label4.Text = "Y (from bottom left)";
+            // 
+            // picLogo
+            // 
+            this.picLogo.Location = new System.Drawing.Point(628, 30);
+            this.picLogo.Name = "picLogo";
+            this.picLogo.Size = new System.Drawing.Size(220, 228);
+            this.picLogo.TabIndex = 18;
+            this.picLogo.TabStop = false;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(611, 288);
+            this.ClientSize = new System.Drawing.Size(893, 412);
+            this.Controls.Add(this.picLogo);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.nmrY);
+            this.Controls.Add(this.nmrX);
+            this.Controls.Add(this.nmrWDivH);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.nmrRatio);
             this.Controls.Add(this.btnProcess);
@@ -170,6 +267,10 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Image processing";
             ((System.ComponentModel.ISupportInitialize)(this.nmrRatio)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmrWDivH)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmrX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmrY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLogo)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -188,5 +289,13 @@
         private Button btnProcess;
         private NumericUpDown nmrRatio;
         private Label label1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private Label label2;
+        private NumericUpDown nmrWDivH;
+        private NumericUpDown nmrX;
+        private NumericUpDown nmrY;
+        private Label label3;
+        private Label label4;
+        private PictureBox picLogo;
     }
 }
