@@ -51,15 +51,25 @@ namespace ResizeImage
                     txtLogo.Text = selectedFile;
                     logoService = new ImageServices(Cv2.ImRead(txtLogo.Text).Clone());
 
-                    Mat imageResize = new Mat();
-                    logoService.Resize(imageResize, new Size(picLogo.Width, picLogo.Height));
-                    ImageServices imageResizeService = new ImageServices(imageResize);
+                    Mat logoResize = new Mat();
+                    logoService.Resize(logoResize, new Size(picLogo.Width, picLogo.Height));
+                    ImageServices logoResizeService = new ImageServices(logoResize);
 
-                    imageResizeService.FindContour();
+                    logoResizeService.FindContour();
 
-                    imageResizeService.DrawContours();
+                    //logoResizeService.DrawContours();
 
-                    picLogo.Image = ConvertMatToBitmap(imageResize);
+
+                    foreach (Point[] contour in logoResizeService.Contours)
+                    {
+                        // Create a list of polygon vertices
+                        Point[][] polygon = new Point[][] { contour };
+
+                        // Fill the region inside the closed border with black
+                        Cv2.FillPoly(logoResizeService.Image, polygon, Scalar.Black);
+                    }
+
+                    picLogo.Image = ConvertMatToBitmap(logoResize);
 
                     
                 }
@@ -248,6 +258,27 @@ namespace ResizeImage
                 }
             }
             Process.Start("explorer.exe", txtResultFolder.Text);
+        }
+        private Point? GetEquipvalentPoint(Mat src, Mat dst, Point srcPoint)
+        {
+            if(IsPointInImage(src, srcPoint))
+            {
+                double scaleX = (double)src.Width / dst.Width;
+                double scaleY = (double)src.Height / dst.Height;
+
+                Point resizedPoint = new Point((int)(srcPoint.X / scaleX), (int)(srcPoint.Y / scaleY));
+                return resizedPoint;
+            }
+            return null;
+        }
+
+        private bool IsPointInImage(Mat image, Point point)
+        {
+            if (point.X >= 0 && point.X < image.Width && point.Y >= 0 && point.Y < image.Height)
+            {
+                return true;
+            }
+            return false;
         }
 
         private void nmrWDivH_ValueChanged(object sender, EventArgs e)
