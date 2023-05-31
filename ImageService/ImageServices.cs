@@ -65,37 +65,17 @@ namespace ImageService
             Cv2.CvtColor(image, refGray, ColorConversionCodes.BGR2GRAY);
             Mat canny = new Mat();
 
-            Cv2.GaussianBlur(refGray, refGray, new Size(3,3), 1.5, 1.5);
+            Cv2.GaussianBlur(refGray, refGray, new Size(5,5), 0);
 
             Cv2.Canny(refGray, canny, 20, 50);
+
+            Cv2.ImShow("Canny", canny);
+
             Point[][] contours;
             HierarchyIndex[] hIndx;
             Cv2.FindContours(canny, out contours, out hIndx, RetrievalModes.List, ContourApproximationModes.ApproxSimple);
 
-            //List<Point[]> contourResults = new List<Point[]>();
-
-            //double factor = 0.0002;
-            //foreach (Point[] contour in contours)
-            //{
-            //    double epsilon = factor * Cv2.ArcLength(contour, true);
-            //    var contourNew = Cv2.ApproxPolyDP(contour, epsilon, true);
-            //    contourResults.Add(contourNew);
-            //}
-
-            //return contourResults;
-
-            Mat dilatedImage = new Mat();
-            foreach (var contour in contours)
-            {
-                Cv2.DrawContours(canny, new[] { contour }, contourIdx: -1, color: Scalar.White, thickness: 1);
-                Cv2.Dilate(canny, dilatedImage, new Mat(), iterations:2);
-                Cv2.Erode(dilatedImage, dilatedImage, new Mat(), iterations: 2);
-            }
-            Cv2.ImShow("aa", dilatedImage);
-            Point[][] closedContours;
-            closedContours = Cv2.FindContoursAsArray(dilatedImage, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
-
-            return closedContours.ToList();
+            return contours.ToList();
         }
 
         public void DrawContours(int idx = -1)

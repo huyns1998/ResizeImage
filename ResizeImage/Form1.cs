@@ -11,6 +11,7 @@ namespace ResizeImage
     public partial class Form1 : Form
     {
         private ImageServices logoService;
+        private ImageServices logoPictureBoxService;
         public Form1()
         {
             InitializeComponent();
@@ -53,21 +54,9 @@ namespace ResizeImage
 
                     Mat logoResize = new Mat();
                     logoService.Resize(logoResize, new Size(picLogo.Width, picLogo.Height));
-                    ImageServices logoResizeService = new ImageServices(logoResize);
-
-                    logoResizeService.FindContour();
-
-                    //logoResizeService.DrawContours();
+                    logoPictureBoxService = new ImageServices(logoResize);
 
 
-                    foreach (Point[] contour in logoResizeService.Contours)
-                    {
-                        // Create a list of polygon vertices
-                        Point[][] polygon = new Point[][] { contour };
-
-                        // Fill the region inside the closed border with black
-                        Cv2.FillPoly(logoResizeService.Image, polygon, Scalar.Black);
-                    }
 
                     picLogo.Image = ConvertMatToBitmap(logoResize);
 
@@ -302,6 +291,28 @@ namespace ResizeImage
                 // Show an error message for invalid input
                 MessageBox.Show("Invalid input. Please enter a valid decimal value.");
             }
+        }
+
+        private void picLogo_MouseClick(object sender, MouseEventArgs e)
+        {
+            Point position = new Point(e.X, e.Y);
+            Cv2.FloodFill(logoPictureBoxService.Image, position, Scalar.Black);
+
+            for (int y = 0; y < logoPictureBoxService.Image.Height; y++)
+            {
+                for (int x = 0; x < logoPictureBoxService.Image.Width; x++)
+                {
+                    // Get the pixel value at (x, y)
+                    Vec3b pixel = logoPictureBoxService.Image.Get<Vec3b>(y, x);
+
+                    if(pixel.Item0 >= 100 && pixel.Item1 >= 100 && pixel.Item2 >= 100)
+                    {
+                        logoPictureBoxService.Image.Set<Vec3b>(y, x, new Vec3b(0, 0, 0));
+                    }
+                }
+            }
+
+            picLogo.Image = ConvertMatToBitmap(logoPictureBoxService.Image);
         }
     }
 }

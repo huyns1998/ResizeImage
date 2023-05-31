@@ -236,15 +236,16 @@
             // 
             this.picLogo.Location = new System.Drawing.Point(628, 30);
             this.picLogo.Name = "picLogo";
-            this.picLogo.Size = new System.Drawing.Size(220, 228);
+            this.picLogo.Size = new System.Drawing.Size(554, 520);
             this.picLogo.TabIndex = 18;
             this.picLogo.TabStop = false;
+            this.picLogo.MouseClick += new System.Windows.Forms.MouseEventHandler(this.picLogo_MouseClick);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(893, 412);
+            this.ClientSize = new System.Drawing.Size(1200, 709);
             this.Controls.Add(this.picLogo);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
