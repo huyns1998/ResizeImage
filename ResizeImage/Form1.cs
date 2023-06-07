@@ -10,7 +10,9 @@ namespace ResizeImage
 {
     public partial class Form1 : Form
     {
-        private ImageServices logoPictureBoxService;
+        private ImageServices _logoPictureBoxService;
+        private bool floodFill = true;
+        private bool isMousePress = false;
         public Form1()
         {
             InitializeComponent();
@@ -53,15 +55,16 @@ namespace ResizeImage
 
                     Mat logoResize = new Mat();
                     logoService.Resize(logoResize, new Size(picLogo.Width, picLogo.Height));
-                    logoPictureBoxService = new ImageServices(logoResize);
-                    logoPictureBoxService.ListImage.Empty();
-                    logoPictureBoxService.ListImage.Add(logoResize.Clone());
+                    _logoPictureBoxService = new ImageServices(logoResize);
+                    _logoPictureBoxService.ListImage.Empty();
+                    _logoPictureBoxService.ListImage.Add(logoResize.Clone());
                     picLogo.Image = ConvertMatToBitmap(logoResize);
                 }
                 else
                 {
                     txtLogo.Text = string.Empty;
                     picLogo.Image = null;
+                    _logoPictureBoxService = null;
                 }
             }
         }
@@ -142,12 +145,18 @@ namespace ResizeImage
 
             string[] imageFiles = Directory.GetFiles(txtImageFolder.Text);
 
-            Mat frame = Cv2.ImRead(txtFrame.Text);
+            Mat frameImage = Cv2.ImRead(txtFrame.Text);
             Mat logo = Cv2.ImRead(txtLogo.Text);
 
             ImageServices imageService;
             ImageServices logoCloneService;
             ImageServices frameCloneService;
+
+            int frameWidth = frameImage.Width;
+            int frameHeight = frameImage.Height;
+            double frameRate = 1;
+            
+            var imgArray = new Mat[imageFiles.Length];
 
             int k = 0;
             foreach (string imageFile in imageFiles)
@@ -156,94 +165,108 @@ namespace ResizeImage
                 if (extension == ".jpg" || extension == ".jpeg" || extension == ".png")
                 {
                     Mat image = Cv2.ImRead(imageFile);
-                    imageService = new ImageServices(image);
 
-                    Mat logoClone = logo.Clone();
-                    logoCloneService = new ImageServices(logoClone);
+                    imgArray[k] = image;
 
-                    Size logoSize = new Size(Convert.ToInt32(logoClone.Width * nmrRatio.Value / 100), Convert.ToInt32(logoClone.Height * nmrRatio.Value / 100));
+                    //imageService = new ImageServices(image);
 
-                    logoCloneService.Resize(logoCloneService.Image, logoSize);
+                    //Mat logoClone = logo.Clone();
+                    //logoCloneService = new ImageServices(logoClone);
 
+                    //Size logoSize = new Size(Convert.ToInt32(logoClone.Width * nmrRatio.Value / 100), Convert.ToInt32(logoClone.Height * nmrRatio.Value / 100));
 
-                    Mat frameClone = frame.Clone();
-                    frameCloneService = new ImageServices(frameClone);
-
-                    if (imageService.Image != null)
-                    {
-                        if (imageService.Image.Width > frameCloneService.Image.Width || !imageService.IsVertical((double)nmrWDivH.Value))
-                        {
-                            imageService.Resize(imageService.Image, new Size(frameCloneService.Image.Width, imageService.Image.Height));
-                        }
-                        if (image.Height > frame.Height || imageService.IsVertical((double)nmrWDivH.Value))
-                        {
-                            imageService.Resize(imageService.Image, new Size(imageService.Image.Width, frameCloneService.Image.Height));
-                        }
-
-                        //image.CopyTo(frameClone[roi: new Rect(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2, image.Width, image.Height)]);
-                        imageService.CopyTo(frameCloneService.Image, new Rect(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2, image.Width, image.Height));
-
-                        int i = frameCloneService.Image.Width / 2 - imageService.Image.Width / 2;
-                        int j = (frameCloneService.Image.Height) - (frameCloneService.Image.Height / 2 - imageService.Image.Height / 2) - logoCloneService.Image.Height;
-
-                        int logoX = i + (int)nmrX.Value;
-                        int logoY = j - (int)nmrY.Value;
-
-                        Point image_topleft = new Point(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2);
-                        Point image_topright = new Point(frame.Width / 2 - image.Width / 2 + image.Width, frame.Height / 2 - image.Height / 2);
-                        Point image_bottomleft = new Point(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2 + image.Height);
-                        Point image_bottomright = new Point(frame.Width / 2 - image.Width / 2 + image.Width, frame.Height / 2 - image.Height / 2 + image.Height);
-
-                        if (logoX > image_topright.X - logoCloneService.Image.Width)
-                        {
-                            logoX = image_topright.X - logoCloneService.Image.Width;
-                        }
-                        if (logoY < image_topleft.Y)
-                        {
-                            logoY = image_topleft.Y;
-                        }
+                    //logoCloneService.Resize(logoCloneService.Image, logoSize);
 
 
-                        Rect roi = new Rect(logoX, logoY, logoCloneService.Image.Width, logoCloneService.Image.Height);
-                        Mat croppedImage;
-                        try
-                        {
-                            croppedImage = new Mat(frameCloneService.Image, roi);
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-                        for (int y = 0; y < logoClone.Height; y++)
-                        {
-                            for (int x = 0; x < logoClone.Width; x++)
-                            {
-                                Point logoPicPoint = (Point)GetEquipvalentPoint(logoClone, logoPictureBoxService.Image, new Point(x, y));
+                    //Mat frameClone = frameImage.Clone();
+                    //frameCloneService = new ImageServices(frameClone);
 
-                                var pixel = logoPictureBoxService.Image.At<Vec3b>(logoPicPoint.Y, logoPicPoint.X);
+                    //if (imageService.Image != null)
+                    //{
+                    //    if (imageService.Image.Width > frameCloneService.Image.Width || !imageService.IsVertical((double)nmrWDivH.Value))
+                    //    {
+                    //        imageService.Resize(imageService.Image, new Size(frameCloneService.Image.Width, imageService.Image.Height));
+                    //    }
+                    //    if (image.Height > frameImage.Height || imageService.IsVertical((double)nmrWDivH.Value))
+                    //    {
+                    //        imageService.Resize(imageService.Image, new Size(imageService.Image.Width, frameCloneService.Image.Height));
+                    //    }
 
-                                // Access the individual color channels (BGR)
-                                byte blue = pixel.Item0;
-                                byte green = pixel.Item1;
-                                byte red = pixel.Item2;
-                                if (blue == 0 && green == 0 && red == 0)
-                                {
-                                    var pixelCropImage = croppedImage.At<Vec3b>(y, x);
-                                    logoCloneService.Image.Set(y, x, new Vec3b(pixelCropImage.Item0, pixelCropImage.Item1, pixelCropImage.Item2));
-                                }
-                            }
-                        }
+                    //    //image.CopyTo(frameClone[roi: new Rect(frame.Width / 2 - image.Width / 2, frame.Height / 2 - image.Height / 2, image.Width, image.Height)]);
+                    //    imageService.CopyTo(frameCloneService.Image, new Rect(frameImage.Width / 2 - image.Width / 2, frameImage.Height / 2 - image.Height / 2, image.Width, image.Height));
 
-                        logoCloneService.CopyTo(frameCloneService.Image, new Rect(logoX, logoY, logoClone.Width, logoClone.Height));
+                    //    int i = frameCloneService.Image.Width / 2 - imageService.Image.Width / 2;
+                    //    int j = (frameCloneService.Image.Height) - (frameCloneService.Image.Height / 2 - imageService.Image.Height / 2) - logoCloneService.Image.Height;
 
-                        // Create the full file path
-                        string filePath = Path.Combine(txtResultFolder.Text, "Result_" + k + ".jpg");
+                    //    int logoX = i + (int)nmrX.Value;
+                    //    int logoY = j - (int)nmrY.Value;
 
-                        frameCloneService.SaveImage(filePath);
-                    }
-                    k++;
+                    //    Point image_topleft = new Point(frameImage.Width / 2 - image.Width / 2, frameImage.Height / 2 - image.Height / 2);
+                    //    Point image_topright = new Point(frameImage.Width / 2 - image.Width / 2 + image.Width, frameImage.Height / 2 - image.Height / 2);
+                    //    Point image_bottomleft = new Point(frameImage.Width / 2 - image.Width / 2, frameImage.Height / 2 - image.Height / 2 + image.Height);
+                    //    Point image_bottomright = new Point(frameImage.Width / 2 - image.Width / 2 + image.Width, frameImage.Height / 2 - image.Height / 2 + image.Height);
+
+                    //    if (logoX > image_topright.X - logoCloneService.Image.Width)
+                    //    {
+                    //        logoX = image_topright.X - logoCloneService.Image.Width;
+                    //    }
+                    //    if (logoY < image_topleft.Y)
+                    //    {
+                    //        logoY = image_topleft.Y;
+                    //    }
+
+
+                    //    Rect roi = new Rect(logoX, logoY, logoCloneService.Image.Width, logoCloneService.Image.Height);
+                    //    Mat croppedImage;
+                    //    try
+                    //    {
+                    //        croppedImage = new Mat(frameCloneService.Image, roi);
+                    //    }
+                    //    catch
+                    //    {
+                    //        continue;
+                    //    }
+                    //    for (int y = 0; y < logoClone.Height; y++)
+                    //    {
+                    //        for (int x = 0; x < logoClone.Width; x++)
+                    //        {
+                    //            Point logoPicPoint = (Point)GetEquipvalentPoint(logoClone, _logoPictureBoxService.Image, new Point(x, y));
+
+                    //            var pixel = _logoPictureBoxService.Image.At<Vec3b>(logoPicPoint.Y, logoPicPoint.X);
+
+                    //            // Access the individual color channels (BGR)
+                    //            byte blue = pixel.Item0;
+                    //            byte green = pixel.Item1;
+                    //            byte red = pixel.Item2;
+                    //            if (blue == 0 && green == 0 && red == 0)
+                    //            {
+                    //                var pixelCropImage = croppedImage.At<Vec3b>(y, x);
+                    //                logoCloneService.Image.Set(y, x, new Vec3b(pixelCropImage.Item0, pixelCropImage.Item1, pixelCropImage.Item2));
+                    //            }
+                    //        }
+                    //    }
+
+                    //    logoCloneService.CopyTo(frameCloneService.Image, new Rect(logoX, logoY, logoClone.Width, logoClone.Height));
+
+                    //    // Create the full file path
+                    //    string filePath = Path.Combine(txtResultFolder.Text, "Result_" + k + ".jpg");
+
+                    //    frameCloneService.SaveImage(filePath);
+                    //}
+                    k++;  
                 }
             }
+
+            Size size = new Size(frameImage.Width, frameImage.Height);
+            VideoWriter videoWriter = new VideoWriter(Path.Combine(txtResultFolder.Text, "Video" + ".avi"),
+                FourCC.XVID, 60, size);
+            foreach (Mat img in imgArray)
+            {
+                videoWriter.Write(img);
+            }
+
+
+            videoWriter.Release();
             Process.Start("explorer.exe", txtResultFolder.Text);
         }
         private Point? GetEquipvalentPoint(Mat src, Mat dst, Point srcPoint)
@@ -293,51 +316,64 @@ namespace ResizeImage
 
         private void picLogo_MouseClick(object sender, MouseEventArgs e)
         {
-            if (logoPictureBoxService != null)
+            if (_logoPictureBoxService != null)
             {
                 Point position = new Point(e.X, e.Y);
+                int currentIndex = _logoPictureBoxService.ListImage.CurrentIndex;
+                int listImageCount = _logoPictureBoxService.ListImage.Count;
 
-                Cv2.FloodFill(logoPictureBoxService.Image, position, Scalar.Black);
-
-                for (int i = logoPictureBoxService.ListImage.CurrentIndex + 1; i <= logoPictureBoxService.ListImage.Count - 1; i++)
+                for (int i = currentIndex + 1; i <= listImageCount - 1; i++)
                 {
-                    logoPictureBoxService.ListImage.Remove(i);
+                    _logoPictureBoxService.ListImage.Remove(i);
+                    listImageCount--;
+                }
+                Mat imageClone = _logoPictureBoxService.Image.Clone();
+
+                if (floodFill)
+                {
+                    Cv2.FloodFill(imageClone, position, Scalar.Black);
+                }
+                else
+                {
+                    imageClone.Set(e.Location.Y, e.Location.X, new Vec3b(0, 0, 0));
                 }
 
-                logoPictureBoxService.ListImage.Add(logoPictureBoxService.Image.Clone());
-                if (logoPictureBoxService.ListImage.CurrentIndex < logoPictureBoxService.ListImage.MaxSize - 1)
+                _logoPictureBoxService.ListImage.Add(imageClone);
+                if (_logoPictureBoxService.ListImage.CurrentIndex < _logoPictureBoxService.ListImage.MaxSize - 1)
                 {
-                    logoPictureBoxService.ListImage.CurrentIndex++;
+                    _logoPictureBoxService.ListImage.CurrentIndex++;
                 }
-                picLogo.Image = ConvertMatToBitmap(logoPictureBoxService.Image);
+
+                _logoPictureBoxService.Image = imageClone;
+
+                picLogo.Image = ConvertMatToBitmap(_logoPictureBoxService.Image);
             }
         }
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            if (logoPictureBoxService != null)
+            if (_logoPictureBoxService != null)
             {
-                logoPictureBoxService.Image = logoPictureBoxService.OriginalImage.Clone();
-                logoPictureBoxService.ListImage.Empty();
-                logoPictureBoxService.ListImage.Add(logoPictureBoxService.Image.Clone());
-                picLogo.Image = ConvertMatToBitmap(logoPictureBoxService.Image);
+                _logoPictureBoxService.Image = _logoPictureBoxService.OriginalImage.Clone();
+                _logoPictureBoxService.ListImage.Empty();
+                _logoPictureBoxService.ListImage.Add(_logoPictureBoxService.Image.Clone());
+                picLogo.Image = ConvertMatToBitmap(_logoPictureBoxService.Image);
             }
         }
 
         private void btnBack_Click(object sender, EventArgs e)
         {
-            if (logoPictureBoxService != null)
+            if (_logoPictureBoxService != null)
             {
-                if (logoPictureBoxService.ListImage.Count > 0)
+                if (_logoPictureBoxService.ListImage.Count > 0)
                 {
-                    if (logoPictureBoxService.ListImage.CurrentIndex >= 0)
+                    if (_logoPictureBoxService.ListImage.CurrentIndex >= 0)
                     {
-                        if (logoPictureBoxService.ListImage.CurrentIndex != 0)
+                        if (_logoPictureBoxService.ListImage.CurrentIndex != 0)
                         {
-                            logoPictureBoxService.ListImage.CurrentIndex--;
-                            logoPictureBoxService.Image = logoPictureBoxService.ListImage.Get(logoPictureBoxService.ListImage.CurrentIndex);
-
-                            picLogo.Image = ConvertMatToBitmap(logoPictureBoxService.Image);
+                            _logoPictureBoxService.ListImage.CurrentIndex--;
+                            _logoPictureBoxService.Image = _logoPictureBoxService.ListImage.Get(_logoPictureBoxService.ListImage.CurrentIndex);
+                            picLogo.Image = ConvertMatToBitmap(_logoPictureBoxService.Image);
                         }
                     }
                 }
@@ -346,19 +382,69 @@ namespace ResizeImage
 
         private void btnForward_Click(object sender, EventArgs e)
         {
-            if (logoPictureBoxService != null)
+            if (_logoPictureBoxService != null)
             {
-                if (logoPictureBoxService.ListImage.CurrentIndex < (logoPictureBoxService.ListImage.MaxSize - 1))
+                if (_logoPictureBoxService.ListImage.Count > 0)
                 {
-                    logoPictureBoxService.ListImage.CurrentIndex++;
-                    logoPictureBoxService.Image = logoPictureBoxService.ListImage.Get(logoPictureBoxService.ListImage.CurrentIndex);
-                    picLogo.Image = ConvertMatToBitmap(logoPictureBoxService.Image);
+                    if (_logoPictureBoxService.ListImage.CurrentIndex < (_logoPictureBoxService.ListImage.Count - 1))
+                    {
+                        _logoPictureBoxService.ListImage.CurrentIndex++;
+                        _logoPictureBoxService.Image = _logoPictureBoxService.ListImage.Get(_logoPictureBoxService.ListImage.CurrentIndex);
+                        picLogo.Image = ConvertMatToBitmap(_logoPictureBoxService.Image);
+                    }
+                    else if (_logoPictureBoxService.ListImage.CurrentIndex == (_logoPictureBoxService.ListImage.Count - 1))
+                    {
+                        _logoPictureBoxService.Image = _logoPictureBoxService.ListImage.Get(_logoPictureBoxService.ListImage.CurrentIndex);
+                        picLogo.Image = ConvertMatToBitmap(_logoPictureBoxService.Image);
+                    }
                 }
-                else if(logoPictureBoxService.ListImage.CurrentIndex == (logoPictureBoxService.ListImage.MaxSize - 1))
+            }
+        }
+        private void rdoFill_CheckedChanged(object sender, EventArgs e)
+        {
+            floodFill = true;
+        }
+
+        private void rdoDraw_CheckedChanged(object sender, EventArgs e)
+        {
+            floodFill = false;
+        }
+
+        private void picLogo_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (isMousePress && !floodFill)
+            {
+                _logoPictureBoxService.Image.Set(e.Location.Y, e.Location.X, new Vec3b(0, 0, 0));
+                picLogo.Image = ConvertMatToBitmap(_logoPictureBoxService.Image);
+            }
+        }
+
+        private void picLogo_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                isMousePress = true;
+            }
+        }
+
+        private void picLogo_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left && !floodFill)
+            {
+                isMousePress = false;
+                _logoPictureBoxService.ListImage.Add(_logoPictureBoxService.Image);
+                if (_logoPictureBoxService.ListImage.CurrentIndex < _logoPictureBoxService.ListImage.MaxSize - 1)
                 {
-                    logoPictureBoxService.Image = logoPictureBoxService.ListImage.Get(logoPictureBoxService.ListImage.CurrentIndex);
-                    picLogo.Image = ConvertMatToBitmap(logoPictureBoxService.Image);
+                    _logoPictureBoxService.ListImage.CurrentIndex++;
                 }
+            }
+        }
+
+        private void picLogo_MouseLeave(object sender, EventArgs e)
+        {
+            if (!floodFill)
+            {
+                isMousePress = false;
             }
         }
     }

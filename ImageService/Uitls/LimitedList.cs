@@ -9,6 +9,9 @@ namespace ImageService.Uitls
     public class LimitedList<T>
     {
         private List<T> list;
+
+        public List<T> List { get => list ??= new List<T>(); }
+
         private int maxSize;
 
         public int MaxSize { get => maxSize; }

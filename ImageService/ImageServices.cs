@@ -19,13 +19,13 @@ namespace ImageService
 
         public ImageServices()
         {
-            _listImage = new LimitedList<Mat>(10);
+            _listImage = new LimitedList<Mat>(30);
         }
         public ImageServices(Mat image)
         {
             _image = image;
             _originalImage = image.Clone();
-            _listImage = new LimitedList<Mat>(10);
+            _listImage = new LimitedList<Mat>(30);
         }
 
         public void SaveImage(string filePath)
