@@ -1,15 +1,16 @@
-﻿using OpenCvSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
+﻿using ImageService.Uitls;
+using OpenCvSharp;
 
 namespace ImageService
 {
     public class ImageServices
     {
+        private LimitedList<Mat> _listImage;
+        public LimitedList<Mat> ListImage { get => _listImage; }
+
+        private Mat _originalImage;
+        public Mat OriginalImage { get => _originalImage; }
+
         private Mat _image;
         public Mat Image { get => _image; set => _image = value; }
 
@@ -18,10 +19,13 @@ namespace ImageService
 
         public ImageServices()
         {
+            _listImage = new LimitedList<Mat>(10);
         }
         public ImageServices(Mat image)
         {
             _image = image;
+            _originalImage = image.Clone();
+            _listImage = new LimitedList<Mat>(10);
         }
 
         public void SaveImage(string filePath)

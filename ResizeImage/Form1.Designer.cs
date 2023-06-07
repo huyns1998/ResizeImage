@@ -47,6 +47,9 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.picLogo = new System.Windows.Forms.PictureBox();
+            this.btnReset = new System.Windows.Forms.Button();
+            this.btnBack = new System.Windows.Forms.Button();
+            this.btnForward = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.nmrRatio)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nmrWDivH)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nmrX)).BeginInit();
@@ -234,6 +237,7 @@
             // 
             // picLogo
             // 
+            this.picLogo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.picLogo.Location = new System.Drawing.Point(628, 30);
             this.picLogo.Name = "picLogo";
             this.picLogo.Size = new System.Drawing.Size(554, 520);
@@ -241,11 +245,44 @@
             this.picLogo.TabStop = false;
             this.picLogo.MouseClick += new System.Windows.Forms.MouseEventHandler(this.picLogo_MouseClick);
             // 
+            // btnReset
+            // 
+            this.btnReset.Location = new System.Drawing.Point(761, 574);
+            this.btnReset.Name = "btnReset";
+            this.btnReset.Size = new System.Drawing.Size(99, 23);
+            this.btnReset.TabIndex = 19;
+            this.btnReset.Text = "Reset Logo";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+            // 
+            // btnBack
+            // 
+            this.btnBack.Location = new System.Drawing.Point(901, 575);
+            this.btnBack.Name = "btnBack";
+            this.btnBack.Size = new System.Drawing.Size(75, 23);
+            this.btnBack.TabIndex = 20;
+            this.btnBack.Text = "Back";
+            this.btnBack.UseVisualStyleBackColor = true;
+            this.btnBack.Click += new System.EventHandler(this.btnBack_Click);
+            // 
+            // btnForward
+            // 
+            this.btnForward.Location = new System.Drawing.Point(982, 575);
+            this.btnForward.Name = "btnForward";
+            this.btnForward.Size = new System.Drawing.Size(85, 23);
+            this.btnForward.TabIndex = 21;
+            this.btnForward.Text = "Forward";
+            this.btnForward.UseVisualStyleBackColor = true;
+            this.btnForward.Click += new System.EventHandler(this.btnForward_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1200, 709);
+            this.Controls.Add(this.btnForward);
+            this.Controls.Add(this.btnBack);
+            this.Controls.Add(this.btnReset);
             this.Controls.Add(this.picLogo);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
@@ -298,5 +335,8 @@
         private Label label3;
         private Label label4;
         private PictureBox picLogo;
+        private Button btnReset;
+        private Button btnBack;
+        private Button btnForward;
     }
 }
